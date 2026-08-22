@@ -1,0 +1,9 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored — never commit real secrets.
+
+project_name    = "secure-deploy-kit"
+aws_region      = "us-east-1"
+use_localstack  = true
+container_image = "ghcr.io/arnel-rah/your-api:latest"
+app_port        = 8080
+enable_waf      = true
