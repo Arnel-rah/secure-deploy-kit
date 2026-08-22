@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [prod]
+  push:
+    branches: [prod]
+
+jobs:
+  terraform-validate:
+    name: Terraform validate & format check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, prod]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: terraform fmt check
+        run: terraform fmt -check -recursive terraform/
+
+      - name: terraform init (no backend, validate only)
+        working-directory: terraform/environments/${{ matrix.environment }}
+        run: terraform init -backend=false
+
+      - name: terraform validate
+        working-directory: terraform/environments/${{ matrix.environment }}
+        run: terraform validate
+
+  integration-test-localstack:
+    name: Deploy to LocalStack and smoke-test
+    runs-on: ubuntu-latest
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: ec2,ecs,rds,elbv2,wafv2,iam,logs,sts
+        options: >-
+          --health-cmd "curl -sf http://localhost:4566/_localstack/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Install tflocal
+        run: pip install terraform-local
+
+      - name: Copy example tfvars
+        working-directory: terraform/environments/dev
+        run: cp terraform.tfvars.example terraform.tfvars
+
+      - name: tflocal init
+        working-directory: terraform/environments/dev
+        run: tflocal init
+
+      - name: tflocal apply
+        working-directory: terraform/environments/dev
+        run: tflocal apply -auto-approve
+
+      - name: tflocal destroy (cleanup)
+        if: always()
+        working-directory: terraform/environments/dev
+        run: tflocal destroy -auto-approve
+
+  vulnerability-scan:
+    name: OWASP-aligned static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Checkov (IaC security scan)
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform/
+          quiet: true
+          soft_fail: true

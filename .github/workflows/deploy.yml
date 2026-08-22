@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy (dev or prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  deploy:
+    name: Terraform apply
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+      - name: Configure AWS credentials
+        if: inputs.environment == 'prod'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: terraform init
+        working-directory: terraform/environments/${{ inputs.environment }}
+        run: terraform init
+
+      - name: terraform plan
+        working-directory: terraform/environments/${{ inputs.environment }}
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_container_image: ${{ vars.CONTAINER_IMAGE }}
+
+      - name: terraform apply
+        working-directory: terraform/environments/${{ inputs.environment }}
+        run: terraform apply -auto-approve tfplan
