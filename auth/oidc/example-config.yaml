@@ -1,0 +1,27 @@
+# Example application.yml snippet for a Spring Boot resource server
+# authenticating via OIDC. Copy the relevant parts into your own API.
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/secure-deploy-kit
+          # Spring auto-discovers the JWK set from the issuer's
+          # /.well-known/openid-configuration document — no manual
+          # public key management needed.
+
+---
+# Example role mapping (application code, not YAML config):
+#
+# @Bean
+# public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+#     http
+#         .authorizeHttpRequests(auth -> auth
+#             .requestMatchers("/actuator/health").permitAll()
+#             .requestMatchers("/admin/**").hasRole("ADMIN")
+#             .anyRequest().authenticated()
+#         )
+#         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+#     return http.build();
+# }
