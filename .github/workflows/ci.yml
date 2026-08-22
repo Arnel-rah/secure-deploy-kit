@@ -20,12 +20,22 @@ jobs:
         with:
           terraform_version: "1.9.0"
 
+      - name: Cache Terraform providers
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.terraform.d/plugin-cache
+          key: terraform-providers-${{ matrix.environment }}-${{ hashFiles('terraform/environments/**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-providers-${{ matrix.environment }}-
+
       - name: terraform fmt check
         run: terraform fmt -check -recursive terraform/
 
       - name: terraform init (no backend, validate only)
         working-directory: terraform/environments/${{ matrix.environment }}
         run: terraform init -backend=false
+        env:
+          TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
 
       - name: terraform validate
         working-directory: terraform/environments/${{ matrix.environment }}
@@ -52,9 +62,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9.0"
+
+      - name: Cache Terraform providers
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.terraform.d/plugin-cache
+          key: terraform-providers-dev-${{ hashFiles('terraform/environments/dev/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-providers-dev-
 
       - name: Install tflocal
         run: pip install terraform-local
@@ -66,6 +89,8 @@ jobs:
       - name: tflocal init
         working-directory: terraform/environments/dev
         run: tflocal init
+        env:
+          TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
 
       - name: tflocal apply
         working-directory: terraform/environments/dev
