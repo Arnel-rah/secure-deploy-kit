@@ -40,6 +40,7 @@ jobs:
         ports:
           - 4566:4566
         env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
           SERVICES: ec2,ecs,rds,elbv2,wafv2,iam,logs,sts
         options: >-
           --health-cmd "curl -sf http://localhost:4566/_localstack/health"
