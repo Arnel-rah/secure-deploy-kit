@@ -133,6 +133,7 @@ jobs:
         working-directory: terraform/environments/dev
         run: |
           IMAGE=$(echo '${{ needs.build-and-push.outputs.image_tags }}' | head -n1)
+          sed -i '/^container_image/d' terraform.tfvars
           echo "container_image = \"$IMAGE\"" >> terraform.tfvars
 
       - name: tflocal init
