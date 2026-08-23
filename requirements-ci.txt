@@ -1,1 +1,1 @@
-terraform-local
+terraform-local>=0.20.0
