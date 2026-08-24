@@ -42,3 +42,9 @@ variable "enable_waf" {
   type        = bool
   default     = true
 }
+
+variable "oidc_issuer_url" {
+  description = "OIDC provider issuer URL the app should validate bearer tokens against. Leave empty to run without OIDC enforcement (e.g. early smoke tests)."
+  type        = string
+  default     = ""
+}
