@@ -76,6 +76,7 @@ module "compute" {
     SPRING_PROFILES_ACTIVE = "prod"
     DB_HOST                = module.database.db_endpoint
     DB_NAME                = module.database.db_name
+    OIDC_ISSUER_URL        = var.oidc_issuer_url
   }
 
   tags = local.common_tags
