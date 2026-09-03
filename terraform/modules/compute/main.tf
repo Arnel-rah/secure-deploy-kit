@@ -38,6 +38,12 @@ resource "aws_ecs_task_definition" "app" {
       environment = [
         for k, v in var.container_env : { name = k, value = v }
       ]
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = var.db_password_secret_arn
+        }
+      ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {

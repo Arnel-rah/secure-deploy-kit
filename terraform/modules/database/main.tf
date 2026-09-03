@@ -37,3 +37,13 @@ resource "aws_db_instance" "this" {
 
   tags = var.tags
 }
+
+resource "aws_secretsmanager_secret" "db_password" {
+  name = "${var.project_name}-db-password"
+  tags = var.tags
+}
+
+resource "aws_secretsmanager_secret_version" "db_password" {
+  secret_id     = aws_secretsmanager_secret.db_password.id
+  secret_string = coalesce(var.master_password, try(random_password.master[0].result, null))
+}

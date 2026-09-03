@@ -41,9 +41,18 @@ resource "aws_iam_role" "ecs_execution" {
   tags = local.common_tags
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_execution" {
-  role       = aws_iam_role.ecs_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+resource "aws_iam_role_policy" "ecs_execution_secrets" {
+  name = "${var.project_name}-ecs-execution-secrets"
+  role = aws_iam_role.ecs_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = [module.database.db_password_secret_arn]
+    }]
+  })
 }
 
 module "database" {
@@ -71,11 +80,14 @@ module "compute" {
   app_port                = var.app_port
   task_execution_role_arn = aws_iam_role.ecs_execution.arn
   task_role_arn           = module.security.app_task_role_arn
+  db_username             = module.database.db_username
+  db_password_secret_arn  = module.database.db_password_secret_arn
 
   container_env = {
     SPRING_PROFILES_ACTIVE = "prod"
     DB_HOST                = module.database.db_endpoint
     DB_NAME                = module.database.db_name
+    DB_USERNAME            = module.database.db_username
     OIDC_ISSUER_URL        = var.oidc_issuer_url
   }
 

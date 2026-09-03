@@ -96,3 +96,12 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "db_username" {
+  type = string
+}
+
+variable "db_password_secret_arn" {
+  description = "ARN of the Secrets Manager secret holding the DB password, injected into the container via ECS 'secrets' rather than a plaintext env var"
+  type        = string
+}
