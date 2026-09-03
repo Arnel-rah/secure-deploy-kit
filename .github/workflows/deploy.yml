@@ -80,7 +80,7 @@ jobs:
           - 4566:4566
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
-          SERVICES: ec2,ecs,rds,elbv2,wafv2,iam,logs,sts
+          SERVICES: ec2,ecs,rds,elbv2,wafv2,iam,logs,sts,secretsmanager
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         options: >-
@@ -104,7 +104,6 @@ jobs:
       - name: Install tflocal
         run: pip install -r requirements-ci.txt
 
-      # Real prod uses `use_localstack = false` and pulls credentials
       - name: tflocal init
         working-directory: terraform/environments/prod
         run: tflocal init
@@ -138,7 +137,6 @@ jobs:
         with:
           terraform_version: "1.9.0"
 
-      # Real AWS credentials come from GitHub Environment secrets,
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

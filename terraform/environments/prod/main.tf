@@ -75,6 +75,8 @@ module "compute" {
   app_port                = var.app_port
   task_execution_role_arn = aws_iam_role.ecs_execution.arn
   task_role_arn           = module.security.app_task_role_arn
+  db_username             = module.database.db_username
+  db_password_secret_arn  = module.database.db_password_secret_arn
 
   container_env = {
     SPRING_PROFILES_ACTIVE = "prod"
